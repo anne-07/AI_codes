@@ -1,0 +1,1203 @@
+# DFS 
+# Part 1: Recursive DFS from CSV
+import networkx as nx
+import matplotlib.pyplot as plt
+import pandas as pd
+
+def dfs_recursive(graph, node, visited=None, torder=None, edges=None):
+    if visited is None:
+        visited = set()
+    if torder is None:
+        torder = []
+    if edges is None:
+        edges = []
+
+    visited.add(node)
+    torder.append(node)
+
+    for neighbor in graph.neighbors(node):
+        if neighbor not in visited:
+            edges.append((node, neighbor))
+            dfs_recursive(graph, neighbor, visited, torder, edges)
+
+    return torder, edges
+
+# --- Read Graph from CSV ---
+file_path = input("Enter the path to the CSV file (example.csv): ")
+data = pd.read_csv(file_path)
+
+# Create graph
+graph = nx.from_pandas_edgelist(data, 'source', 'target', create_using=nx.Graph())
+
+# Perform Recursive DFS
+startnode = list(graph.nodes())[0]  # first node
+torder_recursive, edges_recursive = dfs_recursive(graph, startnode)
+
+print("\nDFS Traversal Order (Recursive):", torder_recursive)
+
+# --- Plot Graphs ---
+plt.figure(figsize=(12, 5))
+
+# Original graph
+plt.subplot(121)
+pos1 = nx.spring_layout(graph)
+nx.draw(graph, pos1, with_labels=True, node_color='lightgreen', node_size=500, font_size=10, font_weight='bold')
+plt.title("Original Graph (CSV)")
+
+# DFS Traversal Tree (Recursive)
+plt.subplot(122)
+tree_recursive = nx.Graph()
+tree_recursive.add_edges_from(edges_recursive)
+pos2 = nx.spring_layout(tree_recursive)
+nx.draw(tree_recursive, pos2, with_labels=True, node_color='lightblue', node_size=500, font_size=10, font_weight='bold')
+plt.title("DFS Traversal Tree (Recursive)")
+
+plt.tight_layout()
+plt.show()
+
+______________________________________________________________
+# Part 2: Non-Recursive DFS from User Input
+import networkx as nx
+import matplotlib.pyplot as plt
+
+def dfs_non_recursive(graph, startnode):
+    visited = set()
+    stack = [(startnode, None)]
+    torder = []
+    edges = []
+
+    while stack:
+        node, parent = stack.pop()
+        if node not in visited:
+            visited.add(node)
+            torder.append(node)
+            if parent is not None:
+                edges.append((parent, node))
+            neighbors = list(graph.neighbors(node))
+            for neighbor in neighbors:
+                if neighbor not in visited:
+                    stack.append((neighbor, node))
+
+    return torder, edges
+
+# --- Build Graph from User Input ---
+graph = nx.Graph()
+
+n = int(input("Enter number of edges: "))
+print("Enter each edge as two nodes separated by space (e.g., A B):")
+
+for _ in range(n):
+    u, v = input().split()
+    graph.add_edge(u, v)
+
+startnode = input("Enter starting node for DFS: ")
+
+# Perform Non-Recursive DFS
+torder_non_recursive, edges_non_recursive = dfs_non_recursive(graph, startnode)
+
+print("\nDFS Traversal Order (Non-Recursive):", torder_non_recursive)
+
+# --- Plot Graphs ---
+plt.figure(figsize=(12, 5))
+
+# Original graph
+plt.subplot(121)
+pos1 = nx.spring_layout(graph)
+nx.draw(graph, pos1, with_labels=True, node_color='lightcoral', node_size=500, font_size=10, font_weight='bold')
+plt.title("Original Graph (User Input)")
+
+# DFS Traversal Tree (Non-Recursive)
+plt.subplot(122)
+tree_non_recursive = nx.Graph()
+tree_non_recursive.add_edges_from(edges_non_recursive)
+pos2 = nx.spring_layout(tree_non_recursive)
+nx.draw(tree_non_recursive, pos2, with_labels=True, node_color='skyblue', node_size=500, font_size=10, font_weight='bold')
+plt.title("DFS Traversal Tree (Non-Recursive)")
+
+plt.tight_layout()
+plt.show()
+______________________________________________________________
+# BREADTH FIRST SEARCH
+# BFS Algorithm - Read undirected unweighted graph from USER input
+import networkx as nx
+import matplotlib.pyplot as plt
+from collections import deque
+
+def read_graph_from_user():
+    graph = {}
+    n = int(input("Enter number of edges: "))
+    print("Enter each edge (example: A B):")
+    
+    for _ in range(n):
+        u, v = input().split()
+        
+        if u not in graph:
+            graph[u] = []
+        if v not in graph:
+            graph[v] = []
+            
+        graph[u].append(v)
+        graph[v].append(u)  # undirected graph
+        
+    return graph
+
+def bfs_non_recursive(graph, start_node):
+    visited = set()
+    output_graph = {}
+    traversal_sequence = []
+    
+    if start_node not in graph:
+        print(f"Start node {start_node} not found in the graph.")
+        return output_graph, traversal_sequence
+    
+    queue = deque([start_node])
+    visited.add(start_node)
+    
+    while queue:
+        node = queue.popleft()
+        traversal_sequence.append(node)
+        
+        if node not in output_graph:
+            output_graph[node] = []
+        
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+                
+                if neighbor not in output_graph:
+                    output_graph[neighbor] = []
+                output_graph[node].append(neighbor)
+                output_graph[neighbor].append(node)
+    
+    return output_graph, traversal_sequence
+
+def visualize_graph(graph, title):
+    G = nx.Graph()
+    
+    for node, neighbors in graph.items():
+        for neighbor in neighbors:
+            G.add_edge(node, neighbor)
+    
+    pos = nx.spring_layout(G)
+    plt.figure(figsize=(10, 7))
+    plt.title(title)
+    nx.draw(G, pos, with_labels=True, node_color='lightblue', edge_color='gray',
+            node_size=2000, font_size=15, font_weight='bold')
+    plt.show()
+
+# -------- Main Program --------
+
+graph = read_graph_from_user()
+start_node = input("Enter the starting node for BFS: ")
+
+print("\nInput Graph:")
+visualize_graph(graph, "Input Graph")
+
+output_graph_iterative, traversal_sequence_iterative = bfs_non_recursive(graph, start_node)
+
+print("\nBFS Traversal Sequence:", traversal_sequence_iterative)
+
+print("\nBFS Tree (Traversal Tree):")
+visualize_graph(output_graph_iterative, "BFS Traversal Tree (Non-Recursive)")
+
+______________________________________________________________
+# BEST FIRST SEARCH
+#4. bfs(directed unweighted)
+import heapq
+
+def read_graph_from_user():
+    graph = {}
+    heuristic = {}
+
+    num_nodes = int(input("Enter number of nodes: "))
+    for _ in range(num_nodes):
+        node = input("Enter node name: ").strip()
+        h = int(input(f"Enter heuristic value for {node}: "))
+        heuristic[node] = h
+        graph.setdefault(node, [])
+
+    num_edges = int(input("Enter number of edges: "))
+    for _ in range(num_edges):
+        src = input("Enter source node: ").strip()
+        dest = input("Enter destination node: ").strip()
+        # Since your current best-first search ignores weight, no need to ask weight
+        graph.setdefault(src, []).append(dest)
+        graph.setdefault(dest, [])  # In case dest has no outgoing edges
+
+    return graph, heuristic
+
+def best_first_search(graph, start, goal, heuristic):
+    open_list = []
+    heapq.heappush(open_list, (heuristic[start], [start]))
+
+    while open_list:
+        _, path = heapq.heappop(open_list)
+        node = path[-1]
+
+        if node == goal:
+            return path
+
+        for neighbor in graph.get(node, []):
+            if neighbor not in path:
+                heapq.heappush(open_list, (heuristic[neighbor], path + [neighbor]))
+
+    return None
+
+
+graph, heuristic = read_graph_from_user()
+start = input("Enter the start node: ").strip()
+goal = input("Enter the goal node: ").strip()
+
+if start in graph and goal in graph:
+      path = best_first_search(graph, start, goal, heuristic)
+      if path:
+          print("Path from {} to {}: {}".format(start, goal, ' -> '.join(path)))
+      else:
+          print("No path found from {} to {}.".format(start, goal))
+else:
+      print("Invalid start or goal node.")
+
+______________________________________________________________
+# 5 Best First Search for Undirected Weighted Graph
+import heapq
+
+def read_graph_from_user():
+    graph = {}
+    heuristic = {}
+
+    num_nodes = int(input("Enter number of nodes: "))
+    for _ in range(num_nodes):
+        node = input("Enter node name: ").strip()
+        h = int(input(f"Enter heuristic value for {node}: "))
+        heuristic[node] = h
+        graph.setdefault(node, [])
+
+    num_edges = int(input("Enter number of edges: "))
+    for _ in range(num_edges):
+        src = input("Enter source node: ").strip()
+        dest = input("Enter destination node: ").strip()
+        weight = int(input(f"Enter weight between {src} and {dest}: "))
+        graph.setdefault(src, []).append((dest, weight))
+        graph.setdefault(dest, []).append((src, weight))  # Because undirected
+
+    return graph, heuristic
+
+def best_first_search(graph, start, goal, heuristic):
+    open_list = []
+    heapq.heappush(open_list, (heuristic[start], [start]))
+
+    while open_list:
+        _, path = heapq.heappop(open_list)
+        node = path[-1]
+
+        if node == goal:
+            return path
+
+        for neighbor, weight in graph.get(node, []):
+            if neighbor not in path:
+                heapq.heappush(open_list, (heuristic[neighbor], path + [neighbor]))
+
+    return None
+
+graph, heuristic = read_graph_from_user()
+start = input("Enter the start node: ").strip()
+goal = input("Enter the goal node: ").strip()
+
+if start in graph and goal in graph:
+    path = best_first_search(graph, start, goal, heuristic)
+    if path:
+        print("Path from {} to {}: {}".format(start, goal, ' -> '.join(path)))
+    else:
+        print("No path found from {} to {}.".format(start, goal))
+else:
+    print("Invalid start or goal node.")
+
+______________________________________________________________
+
+# 6 Best First Search for Undirected Unweighted Graph
+import heapq
+
+def read_graph_from_user():
+    graph = {}
+    heuristic = {}
+
+    num_nodes = int(input("Enter number of nodes: "))
+    for _ in range(num_nodes):
+        node = input("Enter node name: ").strip()
+        h = int(input(f"Enter heuristic value for {node}: "))
+        heuristic[node] = h
+        graph.setdefault(node, [])
+
+    num_edges = int(input("Enter number of edges: "))
+    for _ in range(num_edges):
+        src = input("Enter source node: ").strip()
+        dest = input("Enter destination node: ").strip()
+        graph.setdefault(src, []).append(dest)
+        graph.setdefault(dest, []).append(src)  # Because undirected
+
+    return graph, heuristic
+
+def best_first_search(graph, start, goal, heuristic):
+    open_list = []
+    heapq.heappush(open_list, (heuristic[start], [start]))
+
+    while open_list:
+        _, path = heapq.heappop(open_list)
+        node = path[-1]
+
+        if node == goal:
+            return path
+
+        for neighbor in graph.get(node, []):
+            if neighbor not in path:
+                heapq.heappush(open_list, (heuristic[neighbor], path + [neighbor]))
+
+    return None
+
+graph, heuristic = read_graph_from_user()
+start = input("Enter the start node: ").strip()
+goal = input("Enter the goal node: ").strip()
+
+if start in graph and goal in graph:
+    path = best_first_search(graph, start, goal, heuristic)
+    if path:
+        print("Path from {} to {}: {}".format(start, goal, ' -> '.join(path)))
+    else:
+        print("No path found from {} to {}.".format(start, goal))
+else:
+    print("Invalid start or goal node.")
+
+______________________________________________________________
+
+# 7 Best First Search for Directed Weighted Graph
+import heapq
+
+def read_graph_from_user():
+    graph = {}
+    heuristic = {}
+
+    num_nodes = int(input("Enter number of nodes: "))
+    for _ in range(num_nodes):
+        node = input("Enter node name: ").strip()
+        h = int(input(f"Enter heuristic value for {node}: "))
+        heuristic[node] = h
+        graph.setdefault(node, [])
+
+    num_edges = int(input("Enter number of edges: "))
+    for _ in range(num_edges):
+        src = input("Enter source node: ").strip()
+        dest = input("Enter destination node: ").strip()
+        weight = int(input(f"Enter weight between {src} and {dest}: "))
+        graph.setdefault(src, []).append((dest, weight))
+        graph.setdefault(dest, [])  # Only src to dest (directed)
+
+    return graph, heuristic
+
+def best_first_search(graph, start, goal, heuristic):
+    open_list = []
+    heapq.heappush(open_list, (heuristic[start], [start]))
+
+    while open_list:
+        _, path = heapq.heappop(open_list)
+        node = path[-1]
+
+        if node == goal:
+            return path
+
+        for neighbor, weight in graph.get(node, []):
+            if neighbor not in path:
+                heapq.heappush(open_list, (heuristic[neighbor], path + [neighbor]))
+
+    return None
+
+graph, heuristic = read_graph_from_user()
+start = input("Enter the start node: ").strip()
+goal = input("Enter the goal node: ").strip()
+
+if start in graph and goal in graph:
+    path = best_first_search(graph, start, goal, heuristic)
+    if path:
+        print("Path from {} to {}: {}".format(start, goal, ' -> '.join(path)))
+    else:
+        print("No path found from {} to {}.".format(start, goal))
+else:
+    print("Invalid start or goal node.")
+
+______________________________________________________________
+
+--------------------------ASTAR-------------------------------
+
+#8 AStar
+import heapq
+import csv
+
+def load_directed_graph_from_csv(file_path):
+    graph = {}
+    with open(file_path, 'r') as f:
+        reader = csv.reader(f)
+        for src, dest, weight in reader:
+            graph.setdefault(src, []).append((dest, int(weight)))
+    return graph
+
+def astar(graph, start, goal, heuristic):
+    queue = [(0 + heuristic.get(start, 0), 0, start, [start])]
+    visited = set()
+    while queue:
+        est_total, cost, node, path = heapq.heappop(queue)
+        if node == goal:
+            return path, cost
+        if node in visited:
+            continue
+        visited.add(node)
+        for neighbor, weight in graph.get(node, []):
+            if neighbor not in visited:
+                heapq.heappush(queue, (cost + weight + heuristic.get(neighbor, 0), cost + weight, neighbor, path + [neighbor]))
+    return None, float('inf')
+
+def main():
+    file_path = input("Enter CSV file path: ")
+    graph = load_directed_graph_from_csv(file_path)
+
+    # Collect all nodes (src and dest)
+    heuristic = {}
+    all_nodes = set(graph.keys())
+    for edges in graph.values():
+        for dest, _ in edges:
+            all_nodes.add(dest)
+
+    print("\nEnter heuristic values for each node:")
+    for node in all_nodes:
+        heuristic[node] = int(input(f"Heuristic value for {node}: "))
+
+    start = input("\nEnter start node: ")
+    goal = input("Enter goal node: ")
+
+    path, cost = astar(graph, start, goal, heuristic)
+    if path:
+        print(f"\nShortest Path: {' -> '.join(path)}")
+        print(f"Total Cost: {cost}")
+    else:
+        print("\nNo path found!")
+
+if __name__ == "__main__":
+    main()
+
+______________________________________________________________
+# 9
+import heapq
+
+def build_directed_graph_from_input():
+    graph = {}
+    n = int(input("Enter number of edges: "))
+    for _ in range(n):
+        src = input("Source node: ")
+        dest = input("Destination node: ")
+        weight = int(input("Weight: "))
+        graph.setdefault(src, []).append((dest, weight))
+    return graph
+
+def astar(graph, start, goal, heuristic):
+    queue = [(0 + heuristic.get(start, 0), 0, start, [start])]
+    visited = set()
+    while queue:
+        est_total, cost, node, path = heapq.heappop(queue)
+        if node == goal:
+            return path, cost
+        if node in visited:
+            continue
+        visited.add(node)
+        for neighbor, weight in graph.get(node, []):
+            if neighbor not in visited:
+                heapq.heappush(queue, (cost + weight + heuristic.get(neighbor, 0), cost + weight, neighbor, path + [neighbor]))
+    return None, float('inf')
+
+def main():
+    graph = build_directed_graph_from_input()
+
+    # Collect all nodes (src and dest)
+    heuristic = {}
+    all_nodes = set(graph.keys())
+    for edges in graph.values():
+        for dest, _ in edges:
+            all_nodes.add(dest)
+
+    print("\nEnter heuristic values for each node:")
+    for node in all_nodes:
+        heuristic[node] = int(input(f"Heuristic value for {node}: "))
+
+    start = input("\nEnter start node: ")
+    goal = input("Enter goal node: ")
+
+    path, cost = astar(graph, start, goal, heuristic)
+    if path:
+        print(f"\nShortest Path: {' -> '.join(path)}")
+        print(f"Total Cost: {cost}")
+    else:
+        print("\nNo path found!")
+
+if __name__ == "__main__":
+    main()
+______________________________________________________________
+
+# 10
+import heapq
+import csv
+
+def load_undirected_graph_from_csv(file_path):
+    graph = {}
+    with open(file_path, 'r') as f:
+        reader = csv.reader(f)
+        for src, dest, weight in reader:
+            weight = int(weight)
+            graph.setdefault(src, []).append((dest, weight))
+            graph.setdefault(dest, []).append((src, weight))
+    return graph
+
+def astar(graph, start, goal, heuristic):
+    queue = [(0 + heuristic.get(start, 0), 0, start, [start])]
+    visited = set()
+    while queue:
+        est_total, cost, node, path = heapq.heappop(queue)
+        if node == goal:
+            return path, cost
+        if node in visited:
+            continue
+        visited.add(node)
+        for neighbor, weight in graph.get(node, []):
+            if neighbor not in visited:
+                heapq.heappush(queue, (cost + weight + heuristic.get(neighbor, 0), cost + weight, neighbor, path + [neighbor]))
+    return None, float('inf')
+
+def main():
+    file_path = input("Enter CSV file path: ")
+    graph = load_undirected_graph_from_csv(file_path)
+
+    # Collect all nodes (src and dest)
+    heuristic = {}
+    all_nodes = set(graph.keys())
+    for edges in graph.values():
+        for dest, _ in edges:
+            all_nodes.add(dest)
+
+    print("\nEnter heuristic values for each node:")
+    for node in all_nodes:
+        heuristic[node] = int(input(f"Heuristic value for {node}: "))
+
+    start = input("\nEnter start node: ")
+    goal = input("Enter goal node: ")
+
+    path, cost = astar(graph, start, goal, heuristic)
+    if path:
+        print(f"\nShortest Path: {' -> '.join(path)}")
+        print(f"Total Cost: {cost}")
+    else:
+        print("\nNo path found!")
+
+if __name__ == "__main__":
+    main()
+
+______________________________________________________________
+
+# 11
+
+import heapq
+
+def build_undirected_graph_from_input():
+    graph = {}
+    n = int(input("Enter number of edges: "))
+    for _ in range(n):
+        src = input("Source node: ")
+        dest = input("Destination node: ")
+        weight = int(input("Weight: "))
+        graph.setdefault(src, []).append((dest, weight))
+        graph.setdefault(dest, []).append((src, weight))
+    return graph
+
+def astar(graph, start, goal, heuristic):
+    queue = [(0 + heuristic.get(start, 0), 0, start, [start])]
+    visited = set()
+    while queue:
+        est_total, cost, node, path = heapq.heappop(queue)
+        if node == goal:
+            return path, cost
+        if node in visited:
+            continue
+        visited.add(node)
+        for neighbor, weight in graph.get(node, []):
+            if neighbor not in visited:
+                heapq.heappush(queue, (cost + weight + heuristic.get(neighbor, 0), cost + weight, neighbor, path + [neighbor]))
+    return None, float('inf')
+
+def main():
+    graph = build_undirected_graph_from_input()
+
+    # Collect all nodes (src and dest)
+    heuristic = {}
+    all_nodes = set(graph.keys())
+    for edges in graph.values():
+        for dest, _ in edges:
+            all_nodes.add(dest)
+
+    print("\nEnter heuristic values for each node:")
+    for node in all_nodes:
+        heuristic[node] = int(input(f"Heuristic value for {node}: "))
+
+    start = input("\nEnter start node: ")
+    goal = input("Enter goal node: ")
+
+    path, cost = astar(graph, start, goal, heuristic)
+    if path:
+        print(f"\nShortest Path: {' -> '.join(path)}")
+        print(f"Total Cost: {cost}")
+    else:
+        print("\nNo path found!")
+
+if __name__ == "__main__":
+    main()
+
+______________________________________________________________
+
+--------------------------FUZZY-------------------------------
+
+#fuxxy set
+n1 = int(input("Enter number of elements in A:"))
+#stored in dicts-- key are elemnts of fuzzy set and values are their membership values
+A={}
+for i in range (n1):
+    k = input("Enter key:")
+    v = float(input("Enter its value"))
+    A[k]=v
+
+n2 = int(input("Enter number of elements in B:"))
+B={}
+for j in range (n2):
+    k = input("Enter key:")
+    v = float(input("Enter its value"))
+    B[k]=v
+n3 = int(input("Enter number of elements in C:"))
+C={}
+for j in range (n3):
+    k = input("Enter key:")
+    v = float(input("Enter its value"))
+    C[k]=v
+print(A)
+print(B)
+print(C)
+union = {}
+for k in set(A) | set(B) | set(C):
+    if k in A and k in B and k in C:
+        union[k]=max(A[k],B[k],C[k])
+    elif k in A:
+        union[k]=A[k]
+    elif k in B:
+        union[k]=B[k]
+    elif k in C:
+        union[k]=C[k]
+        
+intersection = {}
+for k in set(A) & set(B) & set(C):
+    intersection[k] = min(A[k], B[k],C[k])  
+
+complement_A = {}
+for k, v in A.items():
+    complement_A[k] = round(1 - v, 2)
+
+complement_B = {}
+for k, v in B.items():
+    complement_B[k] = round(1-v,2)
+    
+complement_C = {}
+for k, v in C.items():
+    complement_C[k] = round(1-v,2)
+
+print("\nUnion:", union)
+print("\nIntersection:", intersection)
+print("\nComplement of A:", complement_A)
+print("\nComplement of B:", complement_B)
+print("\nComplement of C:", complement_C)
+
+
+print("\nDe Morgan’s Law")
+
+# Complement of Intersection (LHS)
+LHS = {}
+for k, v in intersection.items():
+    LHS[k] = round(1 - v, 2)
+
+# Union of Complements (RHS)
+RHS = {}
+for k in set(A) | set(B):
+    if k in A and k in B:
+        RHS[k] = max(complement_A[k], complement_B[k])
+    elif k in A:
+        RHS[k] = complement_A[k]
+    else:
+        RHS[k] = complement_A[k]
+
+print("LHS (Complement of Intersection):", LHS)
+print("RHS (Union of Complements):", RHS)
+print("De Morgan’s Law holds:", LHS == RHS)
+
+# Complement of Union (LHS)
+LHS = {}
+for k, v in union.items():
+    LHS[k] = round(1 - v, 2)
+
+# Intersection of Complements (RHS)
+RHS = {}
+for k in set(A) & set(B):
+    if k in A and k in B:
+        RHS[k] = min(complement_A[k], complement_B[k])
+    elif k in A:
+        RHS[k] = complement_A[k]
+    else:
+        RHS[k] = complement_A[k]
+
+print("LHS (Complement of Union):", LHS)
+print("RHS (Intersection of Complements):", RHS)
+print("De Morgan’s Law holds:", LHS == RHS)
+
+______________________________________________________________
+
+--------------------------NLP ------------------------------
+
+#22. Text Preprocessing – Cleaning, Lowercase, Tokenization, Stopwords, Spelling Correction
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from textblob import TextBlob
+
+nltk.download('punkt')
+nltk.download('stopwords')
+
+with open("text.txt", "r") as file:
+    text = file.read()
+
+text = re.sub(r'[^a-zA-Zs]', '', text)
+text = re.sub(r's+', ' ', text)
+text = text.lower()
+tokens = word_tokenize(text)
+filtered = [w for w in tokens if w not in stopwords.words('english')]
+corrected = [str(TextBlob(word).correct()) for word in filtered]
+
+print(corrected)
+
+
+#23. Text Preprocessing – Cleaning, Lowercase, Stemming, Lemmatization, 3-Word Phrases
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+nltk.download('wordnet')
+
+stemmer = PorterStemmer()
+lemmatizer = WordNetLemmatizer()
+
+with open("text.txt", "r") as file:
+    text = file.read()
+
+text = re.sub(r'[^a-zA-Zs]', '', text)
+text = re.sub(r's+', ' ', text)
+text = text.lower()
+tokens = word_tokenize(text)
+
+stemmed = [stemmer.stem(w) for w in tokens]
+lemmatized = [lemmatizer.lemmatize(w) for w in stemmed]
+
+three_grams = [' '.join(lemmatized[i:i+3]) for i in range(len(lemmatized)-2)]
+print(three_grams)
+
+
+#24. NLP – One-Hot Encoding from 3 Text Files
+from sklearn.preprocessing import OneHotEncoder
+
+corpus = ""
+for filename in ["file1.txt", "file2.txt", "file3.txt"]:
+    with open(filename, "r") as file:
+        corpus += file.read() + " "
+
+words = list(set(re.sub(r'[^a-zA-Zs]', '', corpus.lower()).split()))
+encoder = OneHotEncoder(sparse=False)
+encoded = encoder.fit_transform([[w] for w in words])
+
+print("Words:", words)
+print("One-hot Encoding:")
+print(encoded)
+
+
+#25. NLP – Bag of Words for Movie Reviews (3 Text Files)
+from sklearn.feature_extraction.text import CountVectorizer
+
+documents = []
+for file_name in ["review1.txt", "review2.txt", "review3.txt"]:
+    with open(file_name, "r") as f:
+        documents.append(f.read())
+
+vectorizer = CountVectorizer()
+X = vectorizer.fit_transform(documents)
+
+print("Bag of Words Matrix:")
+print(X.toarray())
+print("Vocabulary:")
+print(vectorizer.get_feature_names_out())
+
+#26. NLP – TF-IDF for Tourist Place Descriptions (3 Text Files)
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+documents = []
+for file_name in ["place1.txt", "place2.txt", "place3.txt"]:
+    with open(file_name, "r") as f:
+        documents.append(f.read())
+
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(documents)
+
+print("TF-IDF Matrix:")
+print(X.toarray())
+print("Vocabulary:")
+print(vectorizer.get_feature_names_out())
+
+______________________________________________________________
+
+--------------------------MLP ------------------------------
+
+#multilayer perceptron- N binary inputs, two hidden layers and one binary output
+
+import numpy as np
+
+n = int(input("Enter the number of inputs: "))
+total_cases = 2**n
+#generate all combinations of inputs
+inputs = np.array([[int(x) for x in format(i,f'0{n}b')] for i in range(total_cases)])
+
+expected_outputs = []
+print("\nEnter the expected output for each combination:")
+for row in inputs:
+    output = int(input(f"Input: {row} -"))
+    expected_outputs.append(output)
+expected_outputs = np.array(expected_outputs)
+
+# for 2 outputs
+# expected_outputs = []
+# print("\nEnter the expected 2 outputs for each combination (separated by space):")
+# for row in inputs:
+#     output = list(map(int, input(f"Input: {row} - ").split()))
+#     expected_outputs.append(output)
+# expected_outputs = np.array(expected_outputs)
+
+#bias entered for each layer
+bias1 = float(input("\nEnter bias1: ")) #Hidden Layer 1
+bias2 = float(input("Enter bias2: ")) #Hidden Layer 2 
+bias3 = float(input("Enter bias3: ")) #Output Layer 
+
+#hidden layer sizes
+hidden1_neurons = n
+hidden2_neurons = n
+
+
+training_step = 0
+while True:
+    training_step += 1
+    found = True
+    outputs = []
+
+    w1 = np.round(np.random.uniform(-1.5, 1.5, (n,hidden1_neurons)),4)
+    w2 = np.round(np.random.uniform(-1.5, 1.5, (hidden1_neurons, hidden2_neurons)), 4)
+    w3 = np.round(np.random.uniform(-1.5, 1.5, hidden2_neurons), 4)
+
+    for i in range(total_cases):
+        net1 = np.dot(inputs[i],w1)+bias1
+        net2 = np.dot(net1,w2)+bias2
+        net3 = np.dot(net2,w3)+bias3
+
+        output = 1 if net3>=0 else 0
+        outputs.append(output)
+
+        if output!=expected_outputs[i]:
+            found= False
+            break # try again with random weights
+    if found:
+        break
+
+print(f"\nNeural Network with {n} inputs, one output and 2 hidden layers")
+print(f"\nOutput matched expected results in {training_step} training step(s)\n")
+
+print("Weight 1 matrix :")
+print(w1)
+print("\nWeight 2 matrix:")
+print(w2)
+print("\nWeight 3 matrix:")
+print(w3)
+
+for i in range(total_cases):
+    print(f"Input: {inputs[i]} \t Expected: {expected_outputs[i]} \t Output: {outputs[i]}")
+
+----------------------------------------------------------------
+# Multilayer Perceptron - 4 inputs, 1 hidden layer, 2 outputs
+import numpy as np
+
+n = 4  # fixed 4 inputs
+total_cases = 2**n
+
+# generate all input combinations
+inputs = np.array([[int(x) for x in format(i,f'04b')] for i in range(total_cases)])
+
+expected_outputs = []
+print("\nEnter the expected 2 outputs for each combination (separated by space):")
+for row in inputs:
+    output = list(map(int, input(f"Input: {row} - ").split()))
+    expected_outputs.append(output)
+expected_outputs = np.array(expected_outputs)
+
+# biases for hidden layer and output layer
+bias1 = float(input("\nEnter bias1 (for hidden layer): "))
+bias2 = float(input("Enter bias2 (for output layer): "))
+
+# hidden layer size
+hidden_neurons = 4
+output_neurons = 2
+
+training_step = 0
+while True:
+    training_step += 1
+    found = True
+    outputs = []
+
+    w1 = np.round(np.random.uniform(-1.5, 1.5, (n, hidden_neurons)), 4)  # input -> hidden
+    w2 = np.round(np.random.uniform(-1.5, 1.5, (hidden_neurons, output_neurons)), 4)  # hidden -> output
+
+    for i in range(total_cases):
+        net1 = np.dot(inputs[i], w1) + bias1
+        net2 = np.dot(net1, w2) + bias2
+
+        output = [1 if net2[j] >= 0 else 0 for j in range(output_neurons)]
+        outputs.append(output)
+
+        if not np.array_equal(output, expected_outputs[i]):
+            found = False
+            break  # try again
+
+    if found:
+        break
+
+print(f"\nNeural Network with {n} inputs, 1 hidden layer, and 2 outputs")
+print(f"\nOutput matched expected results in {training_step} training step(s)\n")
+
+print("Weight 1 matrix (Input -> Hidden) :")
+print(w1)
+print("\nWeight 2 matrix (Hidden -> Output) :")
+print(w2)
+
+for i in range(total_cases):
+    print(f"Input: {inputs[i]} \t Expected: {expected_outputs[i]} \t Output: {outputs[i]}")
+
+
+-----------------------------------------------------------
+#SIGMOID,TANH,RELU
+import numpy as np 
+
+def sigmoid(x):
+    return 1/(1+np.exp(-x))
+def sigmoid_derivative(x):
+    sx = sigmoid(x)
+    return sx*(1-sx)
+    
+def relu(x):
+    return np.maximum(0, x)
+
+def relu_derivative(x):
+    return (x > 0).astype(float)
+
+def tanh(x):
+    return np.tanh(x)
+
+def tanh_derivative(x):
+    return 1 - np.tanh(x)**2
+
+def binary_cross_entropy(y_true,y_pred):
+    epsilon=1e-8
+    return -np.mean(y_true*np.log(y_pred+epsilon)+(1-y_true)*np.log((1-y_pred)+epsilon))
+def generate_binary_inputs(n):
+    total_cases = 2 ** n
+    return np.array([[int(x) for x in format(i, f'0{n}b')] for i in range(total_cases)])
+
+
+def train_network(inputs, expected_outputs, hidden1_neurons, hidden2_neurons, lr=0.1, epochs=10000):
+    n_samples,n_features = inputs.shape
+
+    W1 = np.random.randn(n_features, hidden1_neurons)
+    B1 = np.zeros((1, hidden1_neurons))
+    W2 = np.random.randn(hidden1_neurons, hidden2_neurons)
+    B2 = np.zeros((1, hidden2_neurons))
+    W3 = np.random.randn(hidden2_neurons, 1)
+    B3 = np.zeros((1, 1))
+    
+    for epoch in range(epochs):
+         # Forward pass
+        Z1 = np.dot(inputs, W1) + B1
+        A1 = sigmoid(Z1) #A1 = tanh(Z1) #A1 = relu(Z1)
+        Z2 = np.dot(A1, W2) + B2
+        A2 = sigmoid(Z2) #A2 = tanh(Z2) #A2 = relu(Z2)
+        Z3 = np.dot(A2, W3) + B3
+        A3 = sigmoid(Z3) #A3 = sigmoid(Z3) , A3 = sigmoid(Z3)
+        loss = binary_cross_entropy(expected_outputs, A3)
+
+        dZ3 = A3 - expected_outputs #dZ3 is the gradient of the loss with respect to Z3 (raw score before final sigmoid).
+        dW3 = np.dot(A2.T, dZ3)# how many neurons contributed to error
+        dB3 = np.sum(dZ3, axis=0, keepdims=True)
+
+        dA2 = np.dot(dZ3, W3.T)
+        dZ2 = dA2 * sigmoid_derivative(Z2) #dZ2 = dA2 * tanh_derivative(Z2) 
+        dW2 = np.dot(A1.T, dZ2)
+        dB2 = np.sum(dZ2, axis=0, keepdims=True)
+
+        dA1 = np.dot(dZ2, W2.T)
+        dZ1 = dA1 * sigmoid_derivative(Z1) #dZ1 = dA1 * tanh_derivative(Z1) 
+        dW1 = np.dot(inputs.T, dZ1) 
+        dB1 = np.sum(dZ1, axis=0, keepdims=True)
+
+        W3 -= lr * dW3
+        B3 -= lr * dB3
+        W2 -= lr * dW2
+        B2 -= lr * dB2
+        W1 -= lr * dW1
+        B1 -= lr * dB1
+
+        if epoch % 1000 == 0 or epoch == epochs - 1:
+            print(f"Epoch {epoch} | Loss: {loss:.6f}")
+            
+    # Final predictions
+    final_output = (A3 > 0.5).astype(int)
+    return final_output,W1,W2,W3
+
+n = int(input("Enter the number of inputs"))
+inputs = generate_binary_inputs(n)
+expected_outputs = []
+for row in inputs :
+    output = int(input(f"Input:{row}-"))
+    expected_outputs.append(output)
+expected_outputs = np.array(expected_outputs).reshape(-1,1)
+
+hidden1 = int(input("\nEnter number of neurons in Hidden Layer 1: "))
+hidden2 = int(input("Enter number of neurons in Hidden Layer 2: "))
+lr = float(input("Enter learning rate (e.g., 0.1): "))
+epochs = int(input("Enter number of training epochs: "))
+
+# ---- Training ----
+predicted_output, W1, W2, W3 = train_network(inputs, expected_outputs,hidden1_neurons=hidden1 ,hidden2_neurons=hidden2,lr=lr,epochs=epochs)
+# ---- Results ----
+print("\nFinal predictions vs Expected:")
+for i in range(len(inputs)):
+    print(f"Input: {inputs[i]} \t Expected: {expected_outputs[i][0]} \t Predicted: {predicted_output[i][0]}")
+
+
+######### GAME##########
+#GAME-NIM SUM
+#WINNING
+
+def nim_sum(piles):
+    """Calculate the nim-sum (XOR of all piles)."""
+    result = 0
+    for pile in piles:
+        result ^= pile
+    return result
+
+def computer_move(piles):
+    """Computes the optimal move for the computer (always wins or draws)."""
+    nim = nim_sum(piles)
+    
+    # If nim-sum is 0, the current player is at a disadvantage
+    if nim == 0:
+        # No optimal move, so the computer will just remove one object from the last pile.
+        for i in range(len(piles)-1, -1, -1):
+            if piles[i] > 0:
+                piles[i] -= 1
+                break
+    else:
+        # Otherwise, find the move that results in a Nim-Sum of 0.
+        for i in range(len(piles)):
+            target = piles[i] ^ nim  # The pile's new size after the move
+            if target < piles[i]:
+                piles[i] = target
+                break
+    return piles
+
+def player_move(piles):
+    """Player makes a move."""
+    while True:
+        try:
+            pile = int(input("Choose a pile (0, 1, 2, ...): "))
+            objects = int(input(f"How many objects to remove from pile {pile}? "))
+            if 0 <= pile < len(piles) and 0 < objects <= piles[pile]:
+                piles[pile] -= objects
+                break
+            else:
+                print("Invalid move. Try again.")
+        except ValueError:
+            print("Invalid input. Try again.")
+    return piles
+
+def play_game():
+    piles = [3, 4, 5]  # Example starting piles
+    while True:
+        print(f"Piles: {piles}")
+        
+        # Player's turn
+        piles = player_move(piles)
+        if sum(piles) == 0:
+            print("Player wins!")
+            break
+        
+        # Computer's turn
+        piles = computer_move(piles)
+        print(f"Computer's turn: {piles}")
+        if sum(piles) == 0:
+            print("Computer wins!")
+            break
+play_game()
+
+------------------------------------------
+#LOSING
+
+def nim_sum(piles):
+    """Calculate the nim-sum (XOR of all piles)."""
+    result = 0
+    for pile in piles:
+        result ^= pile
+    return result
+def computer_move_lose(piles):
+    """Computes the move for the computer (always loses or draws)."""
+    nim = nim_sum(piles)
+    
+    # If nim-sum is 0, the current player is at a disadvantage
+    if nim == 0:
+        # No optimal move, just remove one object from the last pile.
+        for i in range(len(piles)-1, -1, -1):
+            if piles[i] > 0:
+                piles[i] -= 1
+                break
+    else:
+        # Play to ensure the Nim-Sum is not optimized.
+        for i in range(len(piles)):
+            if piles[i] > 1:
+                piles[i] -= 1  # Simply remove one object (this leads to loss eventually)
+                break
+    return piles
+
+def play_game_lose():
+    piles = [3, 4, 5]  # Example starting piles
+    while True:
+        print(f"Piles: {piles}")
+        
+        # Player's turn
+        piles = player_move(piles)
+        if sum(piles) == 0:
+            print("Player wins!")
+            break
+        
+        # Computer's turn (always plays suboptimal, leads to loss or draw)
+        piles = computer_move_lose(piles)
+        print(f"Computer's turn: {piles}")
+        if sum(piles) == 0:
+            print("Computer wins!")
+            break
+play_game_lose()
