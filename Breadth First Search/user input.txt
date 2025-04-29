@@ -1,0 +1,26 @@
+Enter number of edges: 25
+A B
+A C
+A D
+B E
+B F
+C G
+C H
+D I
+D J
+E G
+E H
+F I
+F J
+G I
+G J
+H I
+H J
+I J
+B G
+C E
+D F
+A E
+C F
+B H
+D G
